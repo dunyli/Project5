@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="parallel_merge_sort.cpp" />
     <ClCompile Include="Project5.cpp" />
+    <ClCompile Include="scheduler_model.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="parallel_merge_sort.h" />
