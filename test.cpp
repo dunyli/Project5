@@ -1,7 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "parallel_merge_sort.h"
 #include "scheduler_model.h"
-#include "thread_pool.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

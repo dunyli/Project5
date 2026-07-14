@@ -430,22 +430,38 @@ void* scheduler_worker(void* arg) {
          * ШАГ 4: Проверка вытеснения (для Priority)
          * ============================================ */
         if (s->type == SCHEDULER_PRIORITY && next && next != current_process) {
-            /* Если есть текущий процесс и он не завершён */
             if (current_process && !current_process->is_completed) {
-                /* Проверяем, имеет ли новый процесс более высокий приоритет */
                 if (next->priority < current_process->priority) {
-                    /*
-                     * Вытеснение: более приоритетный процесс вытесняет текущий
-                     * Сохраняем оставшееся время текущего процесса
-                     */
-                    current_process->remaining_time = current_process->burst_time -
-                        (s->current_time - current_process->start_time);
+                    int executed_time = s->current_time - current_process->start_time;
 
-                    printf("[%d] Вытеснен процесс %s (осталось %d тактов)\n",
-                        s->current_time, current_process->name,
-                        current_process->remaining_time);
+                    // Защита от отрицательного времени
+                    if (executed_time < 0) executed_time = 0;
 
-                    current_process = NULL;    /* Текущий процесс больше не выполняется */
+                    if (executed_time >= current_process->burst_time) {
+                        // Процесс должен быть завершён
+                        current_process->completion_time = s->current_time;
+                        current_process->turnaround_time = current_process->completion_time -
+                            current_process->arrival_time;
+                        current_process->waiting_time = current_process->turnaround_time -
+                            current_process->burst_time;
+                        current_process->is_completed = true;
+
+                        printf("[%d] Процесс %s завершен (оборот=%d, ожидание=%d)\n",
+                            s->current_time, current_process->name,
+                            current_process->turnaround_time, current_process->waiting_time);
+
+                        current_process = NULL;
+                    }
+                    else {
+                        current_process->remaining_time = current_process->burst_time - executed_time;
+
+                        printf("[%d] Вытеснен процесс %s (осталось %d тактов)\n",
+                            s->current_time, current_process->name,
+                            current_process->remaining_time);
+
+                        current_process = NULL;
+                    }
+                    continue;
                 }
             }
         }
@@ -509,15 +525,35 @@ void* scheduler_worker(void* arg) {
                 }
                 if (higher_priority) {
                     /* Вытесняем текущий процесс */
-                    current_process->remaining_time = current_process->burst_time -
-                        (s->current_time - current_process->start_time);
+                    int executed_time = s->current_time - current_process->start_time;
 
-                    printf("[%d] Вытеснен процесс %s (осталось %d тактов)\n",
-                        s->current_time, current_process->name,
-                        current_process->remaining_time);
+                    // ВАЖНО: Проверяем, не завершился ли процесс
+                    if (executed_time >= current_process->burst_time) {
+                        // Процесс должен был завершиться - завершаем его
+                        current_process->completion_time = s->current_time;
+                        current_process->turnaround_time = current_process->completion_time -
+                            current_process->arrival_time;
+                        current_process->waiting_time = current_process->turnaround_time -
+                            current_process->burst_time;
+                        current_process->is_completed = true;
 
-                    current_process = NULL;    /* Текущий процесс больше не выполняется */
-                    continue;    /* Переходим к следующей итерации */
+                        printf("[%d] Процесс %s завершен (оборот=%d, ожидание=%d)\n",
+                            s->current_time, current_process->name,
+                            current_process->turnaround_time, current_process->waiting_time);
+
+                        current_process = NULL;
+                    }
+                    else {
+                        // Процесс вытесняется
+                        current_process->remaining_time = current_process->burst_time - executed_time;
+
+                        printf("[%d] Вытеснен процесс %s (осталось %d тактов)\n",
+                            s->current_time, current_process->name,
+                            current_process->remaining_time);
+
+                        current_process = NULL;
+                    }
+                    continue; // Переходим к следующей итерации
                 }
             }
 
