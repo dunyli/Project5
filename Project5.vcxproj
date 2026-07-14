@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="parallel_merge_sort.cpp" />
     <ClCompile Include="Project5.cpp" />
   </ItemGroup>
   <ItemGroup>
