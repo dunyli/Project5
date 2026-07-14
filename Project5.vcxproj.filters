@@ -26,5 +26,8 @@
     <ClInclude Include="parallel_merge_sort.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="scheduler_model.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
